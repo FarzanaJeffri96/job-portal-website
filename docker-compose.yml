@@ -49,5 +49,16 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin  # Set a password for the Grafana admin user
 
+  backend_test:
+    build:
+      context: ./backend
+    container_name: backend-test
+    command: ["npm", "test"]
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+
 volumes:
   mongodb_data:
