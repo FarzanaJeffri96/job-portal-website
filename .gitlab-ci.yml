@@ -16,19 +16,27 @@
 # This specific template is located at:
 # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml
 
-stages:          # List of stages for jobs, and their order of execution
+# Define the stages for the pipeline in the order they should run
+stages:
   - build
   - test
   - deploy
 
-build-job:       # This job runs in the build stage, which runs first.
+# Build stage: Compile code and handle artifacts
+build-job:
   stage: build
   script:
     - echo "Compiling the code..."
     - echo "Compile complete."
+  artifacts:
+    paths:
+      - docker-compose.yml  # Store docker-compose.yml as an artifact for use in later stages
+      - prometheus.yml      # Store prometheus.yml as an artifact for use in later stages
+      - Dockerfile           # Store Dockerfile as an artifact (optional, if needed later)
 
-unit-test-job:   # This job runs in the test stage.
-  stage: test    # It only starts when the job in the build stage completes successfully.
+# Test stage: Run tests and check for necessary files
+unit-test-job:
+  stage: test
   script:
     - echo "Running unit tests..."
     - echo "Checking if necessary files are present..."
@@ -37,17 +45,27 @@ unit-test-job:   # This job runs in the test stage.
     - if [ -f Dockerfile ]; then echo "Dockerfile found"; else echo "Dockerfile not found, but continuing..."; fi
     - sleep 8
     - echo "Code coverage is 90%"
+  dependencies:
+    - build-job  # Ensure this job uses artifacts from the build-job
 
-lint-test-job:   # This job also runs in the test stage.
-  stage: test    # It can run at the same time as unit-test-job (in parallel).
+# Lint stage: Perform code linting
+lint-test-job:
+  stage: test
   script:
     - echo "Linting code... This will take about 6 seconds."
     - sleep 3
     - echo "No lint issues found."
+  dependencies:
+    - build-job  # Ensure this job uses artifacts from the build-job
 
-deploy-job:      # This job runs in the deploy stage.
-  stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
+# Deploy stage: Deploy the application
+deploy-job:
+  stage: deploy
   environment: production
   script:
     - echo "Deploying application..."
     - echo "Application successfully deployed."
+    
+  dependencies:
+    - unit-test-job  # Ensure this job runs only after unit-test-job and lint-test-job are successful
+    - lint-test-job
