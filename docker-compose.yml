@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   mongodb:
     image: mongo:latest
@@ -47,18 +49,16 @@ services:
     ports:
       - "3001:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin  # Set a password for the Grafana admin user
+      - GF_SECURITY_ADMIN_PASSWORD=admin
 
-  backend_test:
+  test-backend:
     build:
       context: ./backend
-    container_name: backend-test
-    command: ["npm", "test"]
+      dockerfile: Dockerfile.test
     depends_on:
       - mongodb
-    volumes:
-      - ./backend:/app
-    working_dir: /app
+    environment:
+      - NODE_ENV=test
 
 volumes:
   mongodb_data:
