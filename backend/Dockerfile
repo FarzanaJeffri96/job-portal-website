@@ -5,6 +5,7 @@ FROM node:22
 COPY package.json ./
 RUN npm install
 RUN npm install cors
+RUN npm install --save-dev jest supertest
 
 # Copy the rest of the application code
 COPY . .
